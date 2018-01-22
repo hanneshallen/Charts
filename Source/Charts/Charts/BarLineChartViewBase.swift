@@ -624,9 +624,9 @@ open class BarLineChartViewBase: ChartViewBase, BarLineScatterCandleBubbleChartD
             
             if _isScaling
             {
-                canZoomMoreX = canZoomMoreX && _scaleXEnabled && (_gestureScaleAxis == .both || _gestureScaleAxis == .x)
-                canZoomMoreY = canZoomMoreY && _scaleYEnabled && (_gestureScaleAxis == .both || _gestureScaleAxis == .y)
-                if canZoomMoreX || canZoomMoreY
+                canZoomMoreX = canZoomMoreX && _scaleXEnabled //&& (_gestureScaleAxis == .both || _gestureScaleAxis == .x)
+                canZoomMoreY = canZoomMoreY && _scaleYEnabled //&& (_gestureScaleAxis == .both || _gestureScaleAxis == .y)
+                if (canZoomMoreX || canZoomMoreY)
                 {
                     var location = recognizer.location(in: self)
                     location.x = location.x - _viewPortHandler.offsetLeft
@@ -640,16 +640,14 @@ open class BarLineChartViewBase: ChartViewBase, BarLineScatterCandleBubbleChartD
                         location.y = -(_viewPortHandler.chartHeight - location.y - _viewPortHandler.offsetBottom)
                     }
                     
-                    let scaleX = canZoomMoreX ? recognizer.nsuiScale : 1.0
-                    let scaleY = canZoomMoreY ? recognizer.nsuiScale : 1.0
+                    let scaleX = canZoomMoreX ? recognizer.scale(view: self)?.x ?? 1.0 : 1.0
+                    let scaleY = canZoomMoreY ? recognizer.scale(view: self)?.y ?? 1.0 : 1.0
                     
-                    var matrix = CGAffineTransform(translationX: location.x, y: location.y)
-                    matrix = matrix.scaledBy(x: scaleX, y: scaleY)
-                    matrix = matrix.translatedBy(x: -location.x, y: -location.y)
+                    var matrix = _viewPortHandler.clippedZoom(scaleX: scaleX, scaleY: scaleY, x: location.x, y: location.y)
                     
                     matrix = _viewPortHandler.touchMatrix.concatenating(matrix)
                     
-                    _viewPortHandler.refresh(newMatrix: matrix, chart: self, invalidate: true)
+                    let _ = _viewPortHandler.refresh(newMatrix: matrix, chart: self, invalidate: true)
                     
                     if delegate !== nil
                     {
